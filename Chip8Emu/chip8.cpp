@@ -125,6 +125,53 @@ void Chip8::handleKeyRelease(SDL_Keycode keycode) {
     }
 }
 
+//expand to support controller
+
+void Chip8::handleGamepadPress(SDL_GameControllerButton button) {
+    switch (button) {
+    case SDL_CONTROLLER_BUTTON_A:
+        key[0x0] = 1; break;
+    case SDL_CONTROLLER_BUTTON_B:
+        key[0x1] = 1; break;
+    case SDL_CONTROLLER_BUTTON_X:
+        key[0x2] = 1; break;
+    case SDL_CONTROLLER_BUTTON_Y:
+        key[0x3] = 1; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+        key[0x4] = 1; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+        key[0x5] = 1; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+        key[0x6] = 1; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+        key[0x7] = 1; break;
+    default: break;
+    }
+}
+
+void Chip8::handleGamepadRelease(SDL_GameControllerButton button) {
+    switch (button) {
+    case SDL_CONTROLLER_BUTTON_A:
+        key[0x0] = 0; break;
+    case SDL_CONTROLLER_BUTTON_B:
+        key[0x1] = 0; break;
+    case SDL_CONTROLLER_BUTTON_X:
+        key[0x2] = 0; break;
+    case SDL_CONTROLLER_BUTTON_Y:
+        key[0x3] = 0; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+        key[0x4] = 0; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+        key[0x5] = 0; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+        key[0x6] = 0; break;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+        key[0x7] = 0; break;
+    default: break;
+    }
+}
+
+
 void Chip8::ExecuteOpcode() {
     uint16_t nnn = opcode & 0x0FFF;      // Address
     uint8_t  n = opcode & 0x000F;        // Lowest nibble
@@ -340,3 +387,6 @@ void Chip8::ExecuteOpcode() {
         break;
     }
 }
+
+
+// reserved for audio

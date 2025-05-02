@@ -8,6 +8,8 @@ public:
     void resetKeys();
     void handleKeyPress(SDL_Keycode keycode);
     void handleKeyRelease(SDL_Keycode keycode);
+    void handleGamepadPress(SDL_GameControllerButton button);
+    void handleGamepadRelease(SDL_GameControllerButton button);
     std::array<uint8_t, 4096> memory{};
     std::array<uint8_t, 64 * 32> gfx{};
     std::array<uint8_t, 16> V{};

@@ -1,4 +1,5 @@
 #include "chip8.h"
+#include "AudioManager.h"
 #include <SDL.h>
 #include <iostream>
 
@@ -20,15 +21,53 @@ int main(int argc, char* argv[]) {
     Chip8 chip8;
     chip8.LoadROM(argv[1]);
 
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER);
     SDL_Window* window = SDL_CreateWindow("Chip-8 Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 64 * SCALE, 32 * SCALE, SDL_WINDOW_SHOWN);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    SDL_GameController* controller = nullptr;
+    if (SDL_NumJoysticks() > 0) {
+        if (SDL_IsGameController(0)) {
+            controller = SDL_GameControllerOpen(0);
+            if (!controller) {
+                std::cerr << "Could not open gamecontroller: " << SDL_GetError() << std::endl;
+            }
+        }
+    }
+
 
     bool quit = false;
     SDL_Event event;
 
+    AudioManager audio;
+    bool beepPlaying = false;
+    uint32_t lastTimerUpdate = SDL_GetTicks();
+
     while (!quit) {
         chip8.EmulateCycle();
+        uint32_t currentTime = SDL_GetTicks();
+        if (currentTime - lastTimerUpdate >= 1000 / 60) { // ~16ms
+            if (chip8.delay_timer > 0)
+                chip8.delay_timer--;
+
+            if (chip8.sound_timer > 0)
+                chip8.sound_timer--;
+
+            lastTimerUpdate = currentTime;
+        }
+
+        if (chip8.sound_timer > 0) {
+            if (!beepPlaying) {
+                audio.playBeep();
+                beepPlaying = true;
+            }
+        }
+        else {
+            if (beepPlaying) {
+                audio.stopBeep();
+                beepPlaying = false;
+            }
+        }
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) quit = true;
@@ -44,6 +83,16 @@ int main(int argc, char* argv[]) {
             // User releases a key
             else if (event.type == SDL_KEYUP) {
                 chip8.handleKeyRelease(event.key.keysym.sym);
+            }
+
+            else if (event.type == SDL_CONTROLLERBUTTONDOWN) {
+                SDL_GameControllerButton button = static_cast<SDL_GameControllerButton>(event.cbutton.button);
+                chip8.handleGamepadPress(button);
+            }
+            // Controller button released
+            else if (event.type == SDL_CONTROLLERBUTTONUP) {
+                SDL_GameControllerButton button = static_cast<SDL_GameControllerButton>(event.cbutton.button);
+                chip8.handleGamepadRelease(button);
             }
         }
 
@@ -71,6 +120,7 @@ int main(int argc, char* argv[]) {
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    if (controller) SDL_GameControllerClose(controller);
     SDL_Quit();
 
     return 0;
